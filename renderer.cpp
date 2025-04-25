@@ -1,9 +1,7 @@
 #include "renderer.h"
 
-Renderer::Renderer(Shape *shapes)
+Renderer::Renderer()
 {
-    this->shapes = shapes;
-
     if (!glfwInit())
         fprintf(stderr, "Failed to initialize GLFW\n");
 
@@ -19,10 +17,9 @@ Renderer::Renderer(Shape *shapes)
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-
-    window = glfwCreateWindow(1024, 768, "Tutorial 01", NULL, NULL);
+    window = glfwCreateWindow(width, height, "Tutorial 01", NULL, NULL);
+    glfwGetFramebufferSize(window, &width, &height);
+    glViewport(0, 0, width, height);
 
     if (window == NULL)
     {
@@ -31,6 +28,9 @@ Renderer::Renderer(Shape *shapes)
     }
 
     glfwMakeContextCurrent(window);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
     if (glewInit() != GLEW_OK)
         fprintf(stderr, "Failed to initialize GLEW\n");
@@ -45,14 +45,29 @@ Renderer::~Renderer()
 
 void Renderer::Draw()
 {
+    // Clear the screen
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Draw Shapes
-    for (int i = 0; i < sizeof(shapes) / sizeof(Shape); i++)
+    for (int i = 0; i < shapes.size(); i++)
     {
         shapes[i].Draw(&camera);
     }
 
     glfwSwapBuffers(window);
     glfwPollEvents();
+}
+
+Shape *Renderer::CreateShape(GLfloat *g_vertex_buffer_data, GLfloat *g_color_buffer_data, size_t sizeVertices, size_t sizeColors)
+{
+    const char *vertex_file_path = "shaders/triangle.vert";
+    const char *fragment_file_path = "shaders/triangle.frag";
+
+    shapes.emplace_back(vertex_file_path, fragment_file_path, g_vertex_buffer_data, g_color_buffer_data, sizeVertices, sizeColors);
+    return &shapes.back();
+}
+
+GLFWwindow *Renderer::GetWindow()
+{
+    return window;
 }

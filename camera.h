@@ -4,6 +4,8 @@
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#pragma once
+
 class Camera
 {
 public:
@@ -13,4 +15,5 @@ public:
         glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
     );
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)1024 / (float)768, 0.1f, 100.0f);
+    void LookAt(glm::vec3 eye, glm::vec3 center);
 };

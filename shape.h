@@ -5,6 +5,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "camera.h"
 
+#pragma once
+
 class Shape
 {
 private:
@@ -18,8 +20,9 @@ public:
     glm::mat4 model = glm::mat4(1.0f);
     glm::vec3 position = glm::vec3(0, 0, 0);
 
-    Shape(char *vert, char *frag, GLfloat *vertices, GLfloat *colors);
+    Shape(const char *vert, const char *frag, GLfloat *vertices, GLfloat *colors, size_t sizeVertices, size_t sizeColors);
     ~Shape();
 
     void Draw(Camera *camera);
+    void SetPosition(glm::vec3 position);
 };

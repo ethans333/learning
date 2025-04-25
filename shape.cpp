@@ -1,9 +1,9 @@
 #include "loadShader.cpp"
 #include "shape.h"
 
-Shape::Shape(char *vert, char *frag, GLfloat *vertices, GLfloat *colors)
+Shape::Shape(const char *vert, const char *frag, GLfloat *vertices, GLfloat *colors, size_t sizeVertices, size_t sizeColors)
 {
-    numVertices = sizeof(vertices) / sizeof(vertices[0]);
+    numVertices = 36;
 
     // Create VAO
     glGenVertexArrays(1, &vao);
@@ -12,12 +12,18 @@ Shape::Shape(char *vert, char *frag, GLfloat *vertices, GLfloat *colors)
     // Create Vertex VBO
     glGenBuffers(1, &vertexBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeVertices, vertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
 
     // Create Color VBO
     glGenBuffers(1, &colorBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeColors, colors, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
+
+    glBindVertexArray(0);
 
     // Create and compile shaders
     shaderProgram = LoadShaders(vert, frag);
@@ -33,31 +39,22 @@ Shape::~Shape()
 
 void Shape::Draw(Camera *camera)
 {
+    // Use shader
+    glUseProgram(shaderProgram);
+
     // Set Model View Projection Matrix
     glm::mat4 mvp = camera->projection * camera->view * model;
     GLint mvpLoc = glGetUniformLocation(shaderProgram, "MVP");
     glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, &mvp[0][0]);
 
-    // Use shader
-    glUseProgram(shaderProgram);
-
-    // Bind VAO
+    // Bind VAO and draw
     glBindVertexArray(vao);
-
-    // Enable Vertex Attributes
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
-
-    // Enable Color Attribute
-    glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
-
-    // Draw Triangles
     glDrawArrays(GL_TRIANGLES, 0, numVertices);
+    glBindVertexArray(0);
+}
 
-    // Disable Vertex Attributes
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
+void Shape::SetPosition(glm::vec3 position)
+{
+    this->position = position;
+    model = glm::translate(glm::mat4(1.0f), position);
 }

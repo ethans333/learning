@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <stdio.h>
 #include <stdlib.h>
+#include <vector>
 #include "camera.h"
 #include "shape.h"
 using namespace glm;
@@ -12,12 +13,17 @@ using namespace glm;
 class Renderer
 {
 private:
+    int width = 1024, height = 768;
     GLFWwindow *window;
-    Camera camera;
-    Shape *shapes;
+    std::vector<Shape> shapes;
 
 public:
-    Renderer(Shape *shapes);
+    Camera camera;
+
+    Renderer();
     ~Renderer();
+
     void Draw();
+    Shape *CreateShape(GLfloat *g_vertex_buffer_data, GLfloat *g_color_buffer_data, size_t sizeVertices, size_t sizeColors);
+    GLFWwindow *GetWindow();
 };
