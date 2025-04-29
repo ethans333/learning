@@ -87,16 +87,12 @@ int main()
     Shape *cube1 = renderer.CreateShape(g_vertex_buffer_data, g_color_buffer_data, 36, 36);
     Shape *cube2 = renderer.CreateShape(g_vertex_buffer_data, g_color_buffer_data, 36, 36);
 
-    float delta = 0.0f;
-
     do
     {
-        cube2->SetPosition(glm::vec3(2 + delta, 0, 0));
-        cube1->SetPosition(glm::vec3(-2 - delta, 0, 0));
+        cube2->SetPosition(glm::vec3(2, 0, 0));
+        cube1->SetPosition(glm::vec3(-2, 0, 0));
 
         renderer.Draw();
-
-        delta += 0.003f;
 
     } while (!glfwWindowShouldClose(renderer.GetWindow()));
 }

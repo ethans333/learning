@@ -7,12 +7,12 @@
       "args": [
         "-fdiagnostics-color=always",
         "-g",
-        "${file}",
+        "main.cpp",
         "shape.cpp",
         "renderer.cpp",
         "camera.cpp",
         "-o",
-        "${fileDirname}/${fileBasenameNoExtension}",
+        "${fileDirname}/main",
         "-lGL",
         "-lGLEW",
         "-lglfw"
@@ -30,7 +30,7 @@
     {
       "label": "run",
       "type": "shell",
-      "command": "./${fileBasenameNoExtension}",
+      "command": "./main",
       "group": "build",
       "presentation": {
         "reveal": "always"

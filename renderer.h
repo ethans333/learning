@@ -16,10 +16,12 @@ private:
     int width = 1024, height = 768;
     GLFWwindow *window;
     std::vector<Shape *> shapes;
+    float deltaTime = 0.0f;
+    float lastFrame = 0.0f;
     void DeleteShapes();
 
 public:
-    Camera camera;
+    Camera camera = Camera(width, height);
     GLuint VAO;
 
     Renderer();

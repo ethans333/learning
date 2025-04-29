@@ -35,7 +35,15 @@ Renderer::Renderer()
     if (glewInit() != GLEW_OK)
         fprintf(stderr, "Failed to initialize GLEW\n");
 
+    // Set V-Sync ON
+    glfwSwapInterval(1);
+
+    // Input
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+
+    glfwSetWindowUserPointer(window, &camera);
+    glfwSetCursorPosCallback(window, Camera::MouseCallbackDispatcher);
 
     // Create VAO
     glGenVertexArrays(1, &VAO);
@@ -55,11 +63,19 @@ void Renderer::Draw()
     // Bind VAO
     glBindVertexArray(VAO);
 
+    // Set Delta Time
+    float currentFrame = glfwGetTime();
+    deltaTime = currentFrame - lastFrame;
+    lastFrame = currentFrame;
+
     // Draw Shapes
     for (int i = 0; i < shapes.size(); i++)
     {
         shapes[i]->Draw(&camera);
     }
+
+    // Process Keyboard Input
+    camera.ProcessInput(window, deltaTime);
 
     // Unbind VAO
     glBindVertexArray(0);
