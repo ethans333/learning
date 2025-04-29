@@ -51,23 +51,33 @@ void Renderer::Draw()
     // Draw Shapes
     for (int i = 0; i < shapes.size(); i++)
     {
-        shapes[i].Draw(&camera);
+        shapes[i]->Draw(&camera);
     }
 
     glfwSwapBuffers(window);
     glfwPollEvents();
 }
 
-Shape *Renderer::CreateShape(GLfloat *g_vertex_buffer_data, GLfloat *g_color_buffer_data, size_t sizeVertices, size_t sizeColors)
+Shape *Renderer::CreateShape(GLfloat *g_vertex_buffer_data, GLfloat *g_color_buffer_data, size_t nVertices, size_t nColors)
 {
     const char *vertex_file_path = "shaders/triangle.vert";
     const char *fragment_file_path = "shaders/triangle.frag";
 
-    shapes.emplace_back(vertex_file_path, fragment_file_path, g_vertex_buffer_data, g_color_buffer_data, sizeVertices, sizeColors);
-    return &shapes.back();
+    Shape *shape = new Shape(vertex_file_path, fragment_file_path, g_vertex_buffer_data, g_color_buffer_data, nVertices, nColors);
+    shapes.push_back(shape);
+
+    return shape;
 }
 
 GLFWwindow *Renderer::GetWindow()
 {
     return window;
+}
+
+void Renderer::DeleteShapes()
+{
+    for (Shape *shape : shapes)
+    {
+        delete shape;
+    }
 }

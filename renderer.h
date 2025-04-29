@@ -15,7 +15,8 @@ class Renderer
 private:
     int width = 1024, height = 768;
     GLFWwindow *window;
-    std::vector<Shape> shapes;
+    std::vector<Shape *> shapes;
+    void DeleteShapes();
 
 public:
     Camera camera;
@@ -24,6 +25,6 @@ public:
     ~Renderer();
 
     void Draw();
-    Shape *CreateShape(GLfloat *g_vertex_buffer_data, GLfloat *g_color_buffer_data, size_t sizeVertices, size_t sizeColors);
+    Shape *CreateShape(GLfloat *g_vertex_buffer_data, GLfloat *g_color_buffer_data, size_t nVertices, size_t nColors);
     GLFWwindow *GetWindow();
 };

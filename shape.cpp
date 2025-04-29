@@ -1,9 +1,9 @@
 #include "loadShader.cpp"
 #include "shape.h"
 
-Shape::Shape(const char *vert, const char *frag, GLfloat *vertices, GLfloat *colors, size_t sizeVertices, size_t sizeColors)
+Shape::Shape(const char *vert, const char *frag, GLfloat *vertices, GLfloat *colors, size_t nVertices, size_t nColors)
 {
-    numVertices = 36;
+    this->nVertices = nVertices;
 
     // Create VAO
     glGenVertexArrays(1, &vao);
@@ -12,14 +12,14 @@ Shape::Shape(const char *vert, const char *frag, GLfloat *vertices, GLfloat *col
     // Create Vertex VBO
     glGenBuffers(1, &vertexBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeVertices, vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * nVertices * 3, vertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
 
     // Create Color VBO
     glGenBuffers(1, &colorBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeColors, colors, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * nColors * 3, colors, GL_STATIC_DRAW);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
 
@@ -49,7 +49,7 @@ void Shape::Draw(Camera *camera)
 
     // Bind VAO and draw
     glBindVertexArray(vao);
-    glDrawArrays(GL_TRIANGLES, 0, numVertices);
+    glDrawArrays(GL_TRIANGLES, 0, nVertices);
     glBindVertexArray(0);
 }
 
