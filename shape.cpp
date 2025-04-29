@@ -1,13 +1,13 @@
 #include "loadShader.cpp"
 #include "shape.h"
 
-Shape::Shape(const char *vert, const char *frag, GLfloat *vertices, GLfloat *colors, size_t nVertices, size_t nColors)
+Shape::Shape(const char *vert, const char *frag, GLfloat *vertices, GLfloat *colors, size_t nVertices, size_t nColors, GLuint *VAO)
 {
     this->nVertices = nVertices;
+    this->VAO = VAO;
 
-    // Create VAO
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
+    // Bind VAO
+    glBindVertexArray(*VAO);
 
     // Create Vertex VBO
     glGenBuffers(1, &vertexBuffer);
@@ -31,7 +31,6 @@ Shape::Shape(const char *vert, const char *frag, GLfloat *vertices, GLfloat *col
 
 Shape::~Shape()
 {
-    glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vertexBuffer);
     glDeleteBuffers(1, &colorBuffer);
     glDeleteProgram(shaderProgram);
@@ -48,9 +47,7 @@ void Shape::Draw(Camera *camera)
     glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, &mvp[0][0]);
 
     // Bind VAO and draw
-    glBindVertexArray(vao);
     glDrawArrays(GL_TRIANGLES, 0, nVertices);
-    glBindVertexArray(0);
 }
 
 void Shape::SetPosition(glm::vec3 position)

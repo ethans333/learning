@@ -36,10 +36,14 @@ Renderer::Renderer()
         fprintf(stderr, "Failed to initialize GLEW\n");
 
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+
+    // Create VAO
+    glGenVertexArrays(1, &VAO);
 }
 
 Renderer::~Renderer()
 {
+    glDeleteVertexArrays(1, &VAO);
     glfwTerminate();
 }
 
@@ -48,12 +52,19 @@ void Renderer::Draw()
     // Clear the screen
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    // Bind VAO
+    glBindVertexArray(VAO);
+
     // Draw Shapes
     for (int i = 0; i < shapes.size(); i++)
     {
         shapes[i]->Draw(&camera);
     }
 
+    // Unbind VAO
+    glBindVertexArray(0);
+
+    // Swap buffers
     glfwSwapBuffers(window);
     glfwPollEvents();
 }
@@ -63,7 +74,7 @@ Shape *Renderer::CreateShape(GLfloat *g_vertex_buffer_data, GLfloat *g_color_buf
     const char *vertex_file_path = "shaders/triangle.vert";
     const char *fragment_file_path = "shaders/triangle.frag";
 
-    Shape *shape = new Shape(vertex_file_path, fragment_file_path, g_vertex_buffer_data, g_color_buffer_data, nVertices, nColors);
+    Shape *shape = new Shape(vertex_file_path, fragment_file_path, g_vertex_buffer_data, g_color_buffer_data, nVertices, nColors, &VAO);
     shapes.push_back(shape);
 
     return shape;

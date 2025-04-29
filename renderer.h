@@ -20,6 +20,7 @@ private:
 
 public:
     Camera camera;
+    GLuint VAO;
 
     Renderer();
     ~Renderer();
