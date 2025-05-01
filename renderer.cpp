@@ -108,3 +108,8 @@ void Renderer::DeleteShapes()
         delete shape;
     }
 }
+
+void Renderer::AddShape(Shape *shape)
+{
+    shapes.push_back(shape);
+}

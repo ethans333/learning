@@ -10,10 +10,12 @@
 #include "shape.h"
 using namespace glm;
 
+#pragma once
+
 class Renderer
 {
 private:
-    int width = 1024, height = 768;
+    int width = 1920, height = 1080;
     GLFWwindow *window;
     std::vector<Shape *> shapes;
     float deltaTime = 0.0f;
@@ -30,4 +32,5 @@ public:
     void Draw();
     Shape *CreateShape(GLfloat *g_vertex_buffer_data, GLfloat *g_color_buffer_data, size_t nVertices, size_t nColors);
     GLFWwindow *GetWindow();
+    void AddShape(Shape *shape);
 };

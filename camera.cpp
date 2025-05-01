@@ -5,6 +5,8 @@ Camera::Camera(int width, int height)
     lastX = width / 2.0f;
     lastY = height / 2.0f;
 
+    projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
+
     view = glm::lookAt(
         position,           // World Space
         glm::vec3(0, 0, 0), // Looks at
@@ -80,6 +82,10 @@ void Camera::ProcessInput(GLFWwindow *window, float deltaTime)
     // Move up
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
         position += cameraUp * velocity;
+
+    // Exit Program
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
 
     UpdateView();
 }

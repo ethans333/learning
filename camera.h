@@ -18,13 +18,13 @@ private:
     float lastX;
     float lastY;
     glm::vec3 front = glm::vec3(0.0f, 0.0f, -1.0f);
-    glm::vec3 position = glm::vec3(3, 5, 0);
+    glm::vec3 position = glm::vec3(3, 5, 3);
     float movementSpeed = 1;
     glm::vec3 cameraUp = glm::vec3(0, 1, 0);
 
 public:
     glm::mat4 view;
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)1024 / (float)768, 0.1f, 100.0f);
+    glm::mat4 projection;
     Camera(int, int);
     static void MouseCallbackDispatcher(GLFWwindow *window, double xpos, double ypos);
     void MouseCallback(GLFWwindow *window, double xpos, double ypos);

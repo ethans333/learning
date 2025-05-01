@@ -6,6 +6,8 @@ Shape::Shape(const char *vert, const char *frag, GLfloat *vertices, GLfloat *col
     this->nVertices = nVertices;
     this->VAO = VAO;
 
+    mode = GL_TRIANGLES;
+
     // Bind VAO
     glBindVertexArray(*VAO);
 
@@ -23,10 +25,34 @@ Shape::Shape(const char *vert, const char *frag, GLfloat *vertices, GLfloat *col
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
 
+    // Unbind VAO
     glBindVertexArray(0);
 
     // Create and compile shaders
     shaderProgram = LoadShaders(vert, frag);
+}
+
+Shape::Shape(GLuint *VAO, std::vector<GLfloat> &vertices, GLenum mode)
+{
+    this->VAO = VAO;
+    this->nVertices = vertices.size() / 3;
+    this->mode = mode;
+
+    // Bind VAO
+    glBindVertexArray(*VAO);
+
+    // Create Vertex VBO
+    glGenBuffers(1, &vertexBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
+
+    // Unbind VAO
+    glBindVertexArray(0);
+
+    // Create Shader Program
+    shaderProgram = LoadShaders("./shaders/jet.vert", "./shaders/jet.frag");
 }
 
 Shape::~Shape()
@@ -47,7 +73,7 @@ void Shape::Draw(Camera *camera)
     glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, &mvp[0][0]);
 
     // Bind VAO and draw
-    glDrawArrays(GL_TRIANGLES, 0, nVertices);
+    glDrawArrays(mode, 0, nVertices);
 }
 
 void Shape::SetPosition(glm::vec3 position)

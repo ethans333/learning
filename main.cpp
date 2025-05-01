@@ -4,6 +4,7 @@
 
 #include "renderer.h"
 #include "shape.h"
+#include "objReader.h"
 
 GLfloat g_vertex_buffer_data[] = {
     -1.0f, -1.0f, -1.0f, // triangle 1 : begin
@@ -87,11 +88,16 @@ int main()
     Shape *cube1 = renderer.CreateShape(g_vertex_buffer_data, g_color_buffer_data, 36, 36);
     Shape *cube2 = renderer.CreateShape(g_vertex_buffer_data, g_color_buffer_data, 36, 36);
 
+    // Load in Jet
+    ObjReader reader = ObjReader();
+    Shape *jet = reader.Read("models/jet.obj", &(renderer.VAO));
+    renderer.AddShape(jet);
+
+    cube1->SetPosition(glm::vec3(10, 0, 10));
+    cube2->SetPosition(glm::vec3(-10, 0, 10));
+
     do
     {
-        cube2->SetPosition(glm::vec3(2, 0, 0));
-        cube1->SetPosition(glm::vec3(-2, 0, 0));
-
         renderer.Draw();
 
     } while (!glfwWindowShouldClose(renderer.GetWindow()));
