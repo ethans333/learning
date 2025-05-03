@@ -85,16 +85,17 @@ int main()
 {
     Renderer renderer = Renderer();
 
-    // Shape *cube1 = renderer.CreateShape(g_vertex_buffer_data, g_color_buffer_data, 36, 36);
-    // Shape *cube2 = renderer.CreateShape(g_vertex_buffer_data, g_color_buffer_data, 36, 36);
-
-    // cube1->SetPosition(glm::vec3(2, 0, 0));
-    // cube2->SetPosition(glm::vec3(-2, 0, 0));
-
     // Load in Jet
     ObjReader reader = ObjReader();
-    Shape *jet = reader.Read("models/jet.obj", &(renderer.VAO));
-    renderer.AddShape(jet);
+
+    Shape *jet1 = reader.Read("models/Areosaur.1/model.obj", &(renderer.VAO));
+    // Shape *jet2 = reader.Read("models/Jet/Jet_01.obj", &(renderer.VAO));
+
+    renderer.AddShape(jet1);
+    // renderer.AddShape(jet2);
+
+    jet1->SetPosition(glm::vec3(-0.5, 0, 0));
+    // jet2->SetPosition(glm::vec3(0.5, 0, 0));
 
     do
     {

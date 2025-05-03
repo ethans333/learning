@@ -33,9 +33,7 @@ Shape::Shape(const char *vert, const char *frag, GLfloat *vertices, GLfloat *col
 Shape::Shape(GLuint *VAO, std::vector<GLfloat> vertices)
 {
     this->VAO = VAO;
-    this->nVertices = vertices.size() / 3;
-
-    std::cout << vertices.size() << std::endl;
+    this->nVertices = vertices.size() / 6;
 
     // Bind VAO
     glBindVertexArray(*VAO);
@@ -44,8 +42,14 @@ Shape::Shape(GLuint *VAO, std::vector<GLfloat> vertices)
     glGenBuffers(1, &vertexBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
+
+    // Attribute 0 (Vertices)
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void *)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
+
+    // Attribute 1 (Colors)
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void *)(3 * sizeof(GLfloat))); // color
+    glEnableVertexAttribArray(1);
 
     // Unbind VAO
     glBindVertexArray(0);
