@@ -1,18 +1,5 @@
 #include "objReader.h"
 
-struct Vec3
-{
-    float x, y, z;
-};
-struct Vec2
-{
-    float u, v;
-};
-struct FaceElement
-{
-    int v, vt, vn;
-};
-
 ObjReader::ObjReader()
 {
 }
@@ -29,9 +16,9 @@ Shape *ObjReader::Read(const char *fileName, GLuint *VAO)
         return nullptr;
     }
 
-    std::vector<Vec3> vertices;
-    std::vector<Vec2> texcoords;
-    std::vector<Vec3> normals;
+    std::vector<glm::vec3> vertices;
+    std::vector<glm::vec2> texcoords;
+    std::vector<glm::vec3> normals;
     std::vector<std::vector<FaceElement>> faces;
 
     // Read Lines
@@ -44,19 +31,19 @@ Shape *ObjReader::Read(const char *fileName, GLuint *VAO)
 
         if (prefix == "v")
         {
-            Vec3 v;
+            glm::vec3 v;
             iss >> v.x >> v.y >> v.z;
             vertices.push_back(v);
         }
         else if (prefix == "vt")
         {
-            Vec2 vt;
-            iss >> vt.u >> vt.v;
+            glm::vec2 vt;
+            iss >> vt.x >> vt.y;
             texcoords.push_back(vt);
         }
         else if (prefix == "vn")
         {
-            Vec3 vn;
+            glm::vec3 vn;
             iss >> vn.x >> vn.y >> vn.z;
             normals.push_back(vn);
         }
@@ -79,27 +66,72 @@ Shape *ObjReader::Read(const char *fileName, GLuint *VAO)
     file.close();
 
     // Build Data
-    GLenum mode = ((int)(faces[0].size() / sizeof(FaceElement)) == 4) ? GL_TRIANGLES : GL_TRIANGLE_STRIP;
+    std::vector<GLfloat> vertexBuffer = BuildVertexBuffer(&faces, &vertices);
 
-    std::vector<GLfloat> vertexBuffer;
-    size_t nVertices = 0;
+    return new Shape(VAO, vertexBuffer);
+}
 
-    for (auto face : faces)
+std::vector<GLfloat> ObjReader::BuildVertexBuffer(std::vector<std::vector<FaceElement>> *faces, std::vector<glm::vec3> *vertices)
+{
+    std::vector<GLfloat> buffer;
+
+    for (std::vector<FaceElement> face : *faces)
     {
-        for (auto fe : face)
-        {
-            vertexBuffer.push_back((GLfloat)vertices[fe.v - 1].x);
-            vertexBuffer.push_back((GLfloat)vertices[fe.v - 1].y);
-            vertexBuffer.push_back((GLfloat)vertices[fe.v - 1].z);
+        size_t nV = face.size();
 
-            nVertices += 1;
-            // vertexBuffer.push_back(texcoords[fe.vt - 1].u);
-            // vertexBuffer.push_back(texcoords[fe.vt - 1].v);
-            // vertexBuffer.push_back(normals[fe.vn - 1].x);
-            // vertexBuffer.push_back(normals[fe.vn - 1].y);
-            // vertexBuffer.push_back(normals[fe.vn - 1].z);
+        // Triangle
+        if (nV == 3)
+        {
+            for (FaceElement e : face)
+            {
+                glm::vec3 vertex = (*vertices)[e.v - 1];
+
+                buffer.push_back((GLfloat)vertex.x);
+                buffer.push_back((GLfloat)vertex.y);
+                buffer.push_back((GLfloat)vertex.z);
+
+                // TODO: Handle Tex Coords and Normals
+            }
+        }
+        else if (nV == 4)
+        {
+            glm::vec3 v0 = (*vertices)[face[0].v - 1];
+            glm::vec3 v1 = (*vertices)[face[1].v - 1];
+            glm::vec3 v2 = (*vertices)[face[2].v - 1];
+            glm::vec3 v3 = (*vertices)[face[3].v - 1];
+
+            // Triangle 1
+            buffer.insert(buffer.end(), {v0.x, v0.y, v0.z, v1.x, v1.y, v1.z, v2.x, v2.y, v2.z});
+            // Triangle 2
+            buffer.insert(buffer.end(), {v0.x, v0.y, v0.z, v2.x, v2.y, v2.z, v3.x, v3.y, v3.z});
+        }
+        // Convex N-Gon
+        else
+        {
+            glm::vec3 v0 = (*vertices)[0];
+
+            for (size_t i = 1; i + 1 < nV; i++)
+            {
+                glm::vec3 v1 = (*vertices)[i];
+                glm::vec3 v2 = (*vertices)[i + 1];
+
+                // Add v0
+                buffer.push_back((GLfloat)v0.x);
+                buffer.push_back((GLfloat)v0.y);
+                buffer.push_back((GLfloat)v0.z);
+
+                // Add v_i
+                buffer.push_back((GLfloat)v1.x);
+                buffer.push_back((GLfloat)v1.y);
+                buffer.push_back((GLfloat)v1.z);
+
+                // Add v_i+1
+                buffer.push_back((GLfloat)v1.x);
+                buffer.push_back((GLfloat)v1.y);
+                buffer.push_back((GLfloat)v1.z);
+            }
         }
     }
 
-    return new Shape(VAO, vertexBuffer, mode);
+    return buffer;
 }

@@ -17,14 +17,13 @@ private:
     GLuint vertexBuffer;
     GLuint colorBuffer;
     GLuint shaderProgram;
-    GLenum mode;
 
 public:
     glm::mat4 model = glm::mat4(1.0f);
     glm::vec3 position = glm::vec3(0, 0, 0);
 
     Shape(const char *vert, const char *frag, GLfloat *vertices, GLfloat *colors, size_t nVertices, size_t nColors, GLuint *VAO);
-    Shape(GLuint *VAO, std::vector<GLfloat> &vertices, GLenum mode);
+    Shape(GLuint *VAO, std::vector<GLfloat> vertices);
     ~Shape();
 
     void Draw(Camera *camera);

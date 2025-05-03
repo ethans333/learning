@@ -6,8 +6,6 @@ Shape::Shape(const char *vert, const char *frag, GLfloat *vertices, GLfloat *col
     this->nVertices = nVertices;
     this->VAO = VAO;
 
-    mode = GL_TRIANGLES;
-
     // Bind VAO
     glBindVertexArray(*VAO);
 
@@ -32,11 +30,12 @@ Shape::Shape(const char *vert, const char *frag, GLfloat *vertices, GLfloat *col
     shaderProgram = LoadShaders(vert, frag);
 }
 
-Shape::Shape(GLuint *VAO, std::vector<GLfloat> &vertices, GLenum mode)
+Shape::Shape(GLuint *VAO, std::vector<GLfloat> vertices)
 {
     this->VAO = VAO;
     this->nVertices = vertices.size() / 3;
-    this->mode = mode;
+
+    std::cout << vertices.size() << std::endl;
 
     // Bind VAO
     glBindVertexArray(*VAO);
@@ -73,7 +72,7 @@ void Shape::Draw(Camera *camera)
     glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, &mvp[0][0]);
 
     // Bind VAO and draw
-    glDrawArrays(mode, 0, nVertices);
+    glDrawArrays(GL_TRIANGLES, 0, nVertices);
 }
 
 void Shape::SetPosition(glm::vec3 position)

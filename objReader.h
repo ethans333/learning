@@ -9,8 +9,16 @@
 
 #pragma once
 
+struct FaceElement
+{
+    int v, vt, vn;
+};
+
 class ObjReader
 {
+private:
+    std::vector<GLfloat> BuildVertexBuffer(std::vector<std::vector<FaceElement>> *faces, std::vector<glm::vec3> *vertices);
+
 public:
     ObjReader();
     Shape *Read(const char *fileName, GLuint *VAO);
