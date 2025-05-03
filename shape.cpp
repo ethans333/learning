@@ -1,55 +1,23 @@
 #include "loadShader.cpp"
 #include "shape.h"
 
-Shape::Shape(const char *vert, const char *frag, GLfloat *vertices, GLfloat *colors, size_t nVertices, size_t nColors, GLuint *VAO)
-{
-    this->nVertices = nVertices;
-    this->VAO = VAO;
-
-    // Bind VAO
-    glBindVertexArray(*VAO);
-
-    // Create Vertex VBO
-    glGenBuffers(1, &vertexBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * nVertices * 3, vertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
-
-    // Create Color VBO
-    glGenBuffers(1, &colorBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * nColors * 3, colors, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
-
-    // Unbind VAO
-    glBindVertexArray(0);
-
-    // Create and compile shaders
-    shaderProgram = LoadShaders(vert, frag);
-}
-
 Shape::Shape(GLuint *VAO, std::vector<GLfloat> vertices)
 {
     this->VAO = VAO;
-    this->nVertices = vertices.size() / 6;
+    this->nVertices = vertices.size() / 9;
 
     // Bind VAO
     glBindVertexArray(*VAO);
 
     // Create Vertex VBO
-    glGenBuffers(1, &vertexBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+    glGenBuffers(1, &modelBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, modelBuffer);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
 
-    // Attribute 0 (Vertices)
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void *)0);
+    // Set Vertex VBO Attributes
     glEnableVertexAttribArray(0);
-
-    // Attribute 1 (Colors)
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void *)(3 * sizeof(GLfloat))); // color
     glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
 
     // Unbind VAO
     glBindVertexArray(0);
@@ -60,8 +28,7 @@ Shape::Shape(GLuint *VAO, std::vector<GLfloat> vertices)
 
 Shape::~Shape()
 {
-    glDeleteBuffers(1, &vertexBuffer);
-    glDeleteBuffers(1, &colorBuffer);
+    glDeleteBuffers(1, &modelBuffer);
     glDeleteProgram(shaderProgram);
 }
 
@@ -70,10 +37,30 @@ void Shape::Draw(Camera *camera)
     // Use shader
     glUseProgram(shaderProgram);
 
-    // Set Model View Projection Matrix
-    glm::mat4 mvp = camera->projection * camera->view * model;
-    GLint mvpLoc = glGetUniformLocation(shaderProgram, "MVP");
-    glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, &mvp[0][0]);
+    // Shader Variables
+    GLint modelId = glGetUniformLocation(shaderProgram, "model");
+    GLint viewId = glGetUniformLocation(shaderProgram, "view");
+    GLint projectionId = glGetUniformLocation(shaderProgram, "projection");
+    GLint lightPosId = glGetUniformLocation(shaderProgram, "lightPos");
+    GLint viewPosId = glGetUniformLocation(shaderProgram, "viewPos");
+
+    glUniformMatrix4fv(modelId, 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(viewId, 1, GL_FALSE, glm::value_ptr(camera->view));
+    glUniformMatrix4fv(projectionId, 1, GL_FALSE, glm::value_ptr(camera->projection));
+
+    glUniform3fv(lightPosId, 1, glm::value_ptr(glm::vec3(1, 20, 1)));
+    glUniform3fv(viewPosId, 1, glm::value_ptr(camera->position));
+
+    // Bind VAO
+    glBindVertexArray(*VAO);
+
+    // Bind VBO
+    glBindBuffer(GL_ARRAY_BUFFER, modelBuffer);
+
+    // Configure attributes for this VBO
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(GLfloat), (void *)0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(GLfloat), (void *)(3 * sizeof(GLfloat)));
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(GLfloat), (void *)(6 * sizeof(GLfloat)));
 
     // Bind VAO and draw
     glDrawArrays(GL_TRIANGLES, 0, nVertices);
@@ -82,5 +69,11 @@ void Shape::Draw(Camera *camera)
 void Shape::SetPosition(glm::vec3 position)
 {
     this->position = position;
-    model = glm::translate(glm::mat4(1.0f), position);
+    model = glm::translate(model, position);
+}
+
+void Shape::SetScale(glm::f32 scale)
+{
+    this->scale = scale;
+    model = glm::scale(model, glm::vec3(scale, scale, scale));
 }

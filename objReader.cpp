@@ -1,10 +1,6 @@
 #include "objReader.h"
 
-ObjReader::ObjReader()
-{
-}
-
-Shape *ObjReader::Read(const char *fileName, GLuint *VAO)
+Shape *ObjReader::Read(std::string fileName, GLuint *VAO)
 {
     std::vector<glm::vec3> vertices;
     std::vector<glm::vec3> texcoords;
@@ -22,7 +18,7 @@ Shape *ObjReader::Read(const char *fileName, GLuint *VAO)
     // Check if File Opened Successfully
     if (!file.is_open())
     {
-        std::cerr << "Failed to open material file: " << fileName << std::endl;
+        fprintf(stderr, "Failed to open OBJ file: %s \n", fileName);
     }
 
     // Read Lines
@@ -85,12 +81,12 @@ Shape *ObjReader::Read(const char *fileName, GLuint *VAO)
     file.close();
 
     // Build Data
-    std::vector<GLfloat> vertexBuffer = BuildVertexBuffer(&faces, &vertices, &colors);
+    std::vector<GLfloat> modelBuffer = BuildVertexBuffer(&faces, &vertices, &normals, &colors);
 
-    return new Shape(VAO, vertexBuffer);
+    return new Shape(VAO, modelBuffer);
 }
 
-std::vector<GLfloat> ObjReader::BuildVertexBuffer(std::vector<std::vector<FaceElement>> *faces, std::vector<glm::vec3> *vertices, std::vector<glm::vec3> *colors)
+std::vector<GLfloat> ObjReader::BuildVertexBuffer(std::vector<std::vector<FaceElement>> *faces, std::vector<glm::vec3> *vertices, std::vector<glm::vec3> *normals, std::vector<glm::vec3> *colors)
 {
     std::vector<GLfloat> buffer;
     size_t i = 0;
@@ -99,6 +95,7 @@ std::vector<GLfloat> ObjReader::BuildVertexBuffer(std::vector<std::vector<FaceEl
     {
         size_t nV = face.size();
         glm::vec3 color = (*colors)[i];
+        glm::vec3 normal = (*normals)[face[0].vn];
 
         // Triangle
         if (nV == 3)
@@ -107,6 +104,7 @@ std::vector<GLfloat> ObjReader::BuildVertexBuffer(std::vector<std::vector<FaceEl
             {
                 glm::vec3 vertex = (*vertices)[e.v - 1];
 
+                // Add Vertex
                 buffer.push_back((GLfloat)vertex.x);
                 buffer.push_back((GLfloat)vertex.y);
                 buffer.push_back((GLfloat)vertex.z);
@@ -116,7 +114,10 @@ std::vector<GLfloat> ObjReader::BuildVertexBuffer(std::vector<std::vector<FaceEl
                 buffer.push_back((GLfloat)color.y);
                 buffer.push_back((GLfloat)color.z);
 
-                // TODO: Handle Tex Coords and Normals
+                // Add Normal
+                buffer.push_back((GLfloat)normal.x);
+                buffer.push_back((GLfloat)normal.y);
+                buffer.push_back((GLfloat)normal.z);
             }
         }
         else if (nV == 4)
@@ -136,6 +137,11 @@ std::vector<GLfloat> ObjReader::BuildVertexBuffer(std::vector<std::vector<FaceEl
             buffer.push_back((GLfloat)color.y);
             buffer.push_back((GLfloat)color.z);
 
+            // Add Normal
+            buffer.push_back((GLfloat)normal.x);
+            buffer.push_back((GLfloat)normal.y);
+            buffer.push_back((GLfloat)normal.z);
+
             // Triangle 1, Vertex 2
             buffer.push_back((GLfloat)v1.x);
             buffer.push_back((GLfloat)v1.y);
@@ -145,6 +151,11 @@ std::vector<GLfloat> ObjReader::BuildVertexBuffer(std::vector<std::vector<FaceEl
             buffer.push_back((GLfloat)color.x);
             buffer.push_back((GLfloat)color.y);
             buffer.push_back((GLfloat)color.z);
+
+            // Add Normal
+            buffer.push_back((GLfloat)normal.x);
+            buffer.push_back((GLfloat)normal.y);
+            buffer.push_back((GLfloat)normal.z);
 
             // Triangle 3, Vertex 3
             buffer.push_back((GLfloat)v2.x);
@@ -156,6 +167,11 @@ std::vector<GLfloat> ObjReader::BuildVertexBuffer(std::vector<std::vector<FaceEl
             buffer.push_back((GLfloat)color.y);
             buffer.push_back((GLfloat)color.z);
 
+            // Add Normal
+            buffer.push_back((GLfloat)normal.x);
+            buffer.push_back((GLfloat)normal.y);
+            buffer.push_back((GLfloat)normal.z);
+
             // Triangle 2, Vertex 1
             buffer.push_back((GLfloat)v0.x);
             buffer.push_back((GLfloat)v0.y);
@@ -165,6 +181,11 @@ std::vector<GLfloat> ObjReader::BuildVertexBuffer(std::vector<std::vector<FaceEl
             buffer.push_back((GLfloat)color.x);
             buffer.push_back((GLfloat)color.y);
             buffer.push_back((GLfloat)color.z);
+
+            // Add Normal
+            buffer.push_back((GLfloat)normal.x);
+            buffer.push_back((GLfloat)normal.y);
+            buffer.push_back((GLfloat)normal.z);
 
             // Triangle 2, Vertex 2
             buffer.push_back((GLfloat)v2.x);
@@ -176,6 +197,11 @@ std::vector<GLfloat> ObjReader::BuildVertexBuffer(std::vector<std::vector<FaceEl
             buffer.push_back((GLfloat)color.y);
             buffer.push_back((GLfloat)color.z);
 
+            // Add Normal
+            buffer.push_back((GLfloat)normal.x);
+            buffer.push_back((GLfloat)normal.y);
+            buffer.push_back((GLfloat)normal.z);
+
             // Triangle 2, Vertex 3
             buffer.push_back((GLfloat)v3.x);
             buffer.push_back((GLfloat)v3.y);
@@ -185,6 +211,11 @@ std::vector<GLfloat> ObjReader::BuildVertexBuffer(std::vector<std::vector<FaceEl
             buffer.push_back((GLfloat)color.x);
             buffer.push_back((GLfloat)color.y);
             buffer.push_back((GLfloat)color.z);
+
+            // Add Normal
+            buffer.push_back((GLfloat)normal.x);
+            buffer.push_back((GLfloat)normal.y);
+            buffer.push_back((GLfloat)normal.z);
         }
         // Convex N-Gon
         else
@@ -206,6 +237,11 @@ std::vector<GLfloat> ObjReader::BuildVertexBuffer(std::vector<std::vector<FaceEl
                 buffer.push_back((GLfloat)color.y);
                 buffer.push_back((GLfloat)color.z);
 
+                // Add Normal
+                buffer.push_back((GLfloat)normal.x);
+                buffer.push_back((GLfloat)normal.y);
+                buffer.push_back((GLfloat)normal.z);
+
                 // Add v_i
                 buffer.push_back((GLfloat)v1.x);
                 buffer.push_back((GLfloat)v1.y);
@@ -216,6 +252,11 @@ std::vector<GLfloat> ObjReader::BuildVertexBuffer(std::vector<std::vector<FaceEl
                 buffer.push_back((GLfloat)color.y);
                 buffer.push_back((GLfloat)color.z);
 
+                // Add Normal
+                buffer.push_back((GLfloat)normal.x);
+                buffer.push_back((GLfloat)normal.y);
+                buffer.push_back((GLfloat)normal.z);
+
                 // Add v_i+1
                 buffer.push_back((GLfloat)v2.x);
                 buffer.push_back((GLfloat)v2.y);
@@ -225,6 +266,11 @@ std::vector<GLfloat> ObjReader::BuildVertexBuffer(std::vector<std::vector<FaceEl
                 buffer.push_back((GLfloat)color.x);
                 buffer.push_back((GLfloat)color.y);
                 buffer.push_back((GLfloat)color.z);
+
+                // Add Normal
+                buffer.push_back((GLfloat)normal.x);
+                buffer.push_back((GLfloat)normal.y);
+                buffer.push_back((GLfloat)normal.z);
             }
         }
 
@@ -245,15 +291,13 @@ std::unordered_map<std::string, glm::vec3> ObjReader::ParseMtlFile(std::string f
     // Check if File Opened Successfully
     if (!file.is_open())
     {
-        std::cerr << "Failed to open material file: " << fileName << std::endl;
+        fprintf(stderr, "Failed to open material file: %s \n", fileName);
     }
 
     // Read Lines
     std::string line;
     while (std::getline(file, line))
     {
-        std::cout << line << std::endl;
-
         std::istringstream iss(line);
         std::string prefix;
         iss >> prefix;

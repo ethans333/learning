@@ -10,7 +10,7 @@ Renderer::Renderer()
     // 4x antialiasing
     glfwWindowHint(GLFW_SAMPLES, 4);
 
-    // We want OpenGL 3.3
+    // OpenGL 3.3
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 
@@ -30,12 +30,12 @@ Renderer::Renderer()
     glfwMakeContextCurrent(window);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
     if (glewInit() != GLEW_OK)
         fprintf(stderr, "Failed to initialize GLEW\n");
 
-    // Set V-Sync ON
+    // V-Sync ON
     glfwSwapInterval(1);
 
     // Input
@@ -85,17 +85,6 @@ void Renderer::Draw()
     glfwPollEvents();
 }
 
-Shape *Renderer::CreateShape(GLfloat *g_vertex_buffer_data, GLfloat *g_color_buffer_data, size_t nVertices, size_t nColors)
-{
-    const char *vertex_file_path = "shaders/triangle.vert";
-    const char *fragment_file_path = "shaders/triangle.frag";
-
-    Shape *shape = new Shape(vertex_file_path, fragment_file_path, g_vertex_buffer_data, g_color_buffer_data, nVertices, nColors, &VAO);
-    shapes.push_back(shape);
-
-    return shape;
-}
-
 GLFWwindow *Renderer::GetWindow()
 {
     return window;
@@ -112,4 +101,11 @@ void Renderer::DeleteShapes()
 void Renderer::AddShape(Shape *shape)
 {
     shapes.push_back(shape);
+}
+
+Shape *Renderer::LoadShape(std::string fileName)
+{
+    Shape *shape = objReader.Read(fileName, &VAO);
+    shapes.push_back(shape);
+    return shape;
 }

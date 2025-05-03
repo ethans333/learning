@@ -19,11 +19,10 @@ struct FaceElement
 class ObjReader
 {
 private:
-    std::vector<GLfloat> BuildVertexBuffer(std::vector<std::vector<FaceElement>> *faces, std::vector<glm::vec3> *vertices, std::vector<glm::vec3> *colors);
+    std::vector<GLfloat> BuildVertexBuffer(std::vector<std::vector<FaceElement>> *faces, std::vector<glm::vec3> *vertices, std::vector<glm::vec3> *normal, std::vector<glm::vec3> *colors);
     std::unordered_map<std::string, glm::vec3> ParseMtlFile(std::string fileName);
     std::string GetDirectory(const std::string &filePath);
 
 public:
-    ObjReader();
-    Shape *Read(const char *fileName, GLuint *VAO);
+    Shape *Read(std::string fileName, GLuint *VAO);
 };
