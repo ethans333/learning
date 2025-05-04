@@ -11,7 +11,7 @@
         "shape.cpp",
         "renderer.cpp",
         "camera.cpp",
-        "objReader.cpp",
+        "objLoader.cpp",
         "-o",
         "${fileDirname}/main",
         "-lGL",

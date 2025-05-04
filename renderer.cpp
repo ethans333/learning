@@ -30,7 +30,7 @@ Renderer::Renderer()
     glfwMakeContextCurrent(window);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
 
     if (glewInit() != GLEW_OK)
         fprintf(stderr, "Failed to initialize GLEW\n");
@@ -39,7 +39,7 @@ Renderer::Renderer()
     glfwSwapInterval(1);
 
     // Input
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
     glfwSetWindowUserPointer(window, &camera);
@@ -105,7 +105,12 @@ void Renderer::AddShape(Shape *shape)
 
 Shape *Renderer::LoadShape(std::string fileName)
 {
-    Shape *shape = objReader.Read(fileName, &VAO);
+    Shape *shape = objLoader.LoadShape(fileName, &VAO);
     shapes.push_back(shape);
     return shape;
+}
+
+std::vector<Shape *> Renderer::LoadShapes(std::string fileName)
+{
+    return objLoader.LoadShapes(fileName, &VAO);
 }

@@ -1,12 +1,3 @@
-newmtl mat17
-  Kd 0.06 0.10 0.13
-
-newmtl mat21
-  Kd 1.00 1.00 1.00
-
-newmtl mat5
-  Kd 0.00 0.34 0.79
-
-newmtl mat15
-  Kd 0.63 0.70 0.72
-
+version https://git-lfs.github.com/spec/v1
+oid sha256:a852308156b7a42f2999022859bd0a1a8584ce6d55f4069c8814ae61876fd935
+size 135

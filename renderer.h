@@ -8,7 +8,7 @@
 #include <vector>
 #include "camera.h"
 #include "shape.h"
-#include "objReader.h"
+#include "objLoader.h"
 using namespace glm;
 
 #pragma once
@@ -25,7 +25,7 @@ private:
 
     std::vector<Shape *> shapes;
 
-    ObjReader objReader = ObjReader();
+    ObjLoader objLoader = ObjLoader();
 
     void DeleteShapes();
 
@@ -40,4 +40,5 @@ public:
     GLFWwindow *GetWindow();
     void AddShape(Shape *shape);
     Shape *LoadShape(std::string fileName);
+    std::vector<Shape *> LoadShapes(std::string fileName);
 };
