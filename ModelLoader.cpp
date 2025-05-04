@@ -1,24 +1,20 @@
-#include "objLoader.h"
+#include "ModelLoader.h"
 
-Shape *ObjLoader::LoadShape(std::string fileName, GLuint *VAO)
+Model *ModelLoader::LoadModel(std::string fileName, GLuint *VAO)
 {
-    Shape *shape;
+    Model *model;
 
     // Create an Assimp importer
     Assimp::Importer importer;
 
     // Import the model with some post-processing flags
-    const aiScene *scene = importer.ReadFile(fileName,
-                                             aiProcess_Triangulate |               // Convert all primitives to triangles
-                                                 aiProcess_GenSmoothNormals |      // Generate normals if none exist
-                                                 aiProcess_FlipUVs |               // Flip textures on Y axis (if needed)
-                                                 aiProcess_JoinIdenticalVertices); // Optimize mesh
+    const aiScene *scene = importer.ReadFile(fileName, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices);
 
     // Check for errors
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
         std::cerr << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
-        return shape;
+        return model;
     }
 
     // Extract vertex data
@@ -92,30 +88,31 @@ Shape *ObjLoader::LoadShape(std::string fileName, GLuint *VAO)
         }
     }
 
-    // Create a new shape
-    shape = new Shape(VAO, vertexData);
-    return shape;
+    // Model Name
+    std::string modelName = fileName.substr(fileName.find_last_of("/\\") + 1);
+    modelName = modelName.substr(0, modelName.find_last_of('.'));
+
+    // Create Model
+    model = new Model(modelName, VAO, vertexData, "shaders/jet.vert", "shaders/jet.frag");
+    return model;
 }
 
-std::vector<Shape *> ObjLoader::LoadShapes(std::string fileName, GLuint *VAO)
+std::map<std::string, Model *> ModelLoader::LoadModels(std::string fileName, GLuint *VAO)
 {
-    std::vector<Shape *> shapes;
+    // Model Map
+    std::map<std::string, Model *> models;
 
     // Create an Assimp importer
     Assimp::Importer importer;
 
     // Import the model with some post-processing flags
-    const aiScene *scene = importer.ReadFile(fileName,
-                                             aiProcess_Triangulate |               // Convert all primitives to triangles
-                                                 aiProcess_GenSmoothNormals |      // Generate normals if none exist
-                                                 aiProcess_FlipUVs |               // Flip textures on Y axis (if needed)
-                                                 aiProcess_JoinIdenticalVertices); // Optimize mesh
+    const aiScene *scene = importer.ReadFile(fileName, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices);
 
     // Check for errors
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
         std::cerr << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
-        return shapes;
+        return models;
     }
 
     // Process all meshes in the scene
@@ -188,10 +185,14 @@ std::vector<Shape *> ObjLoader::LoadShapes(std::string fileName, GLuint *VAO)
             }
         }
 
-        // Create a new shape
-        Shape *shape = new Shape(VAO, vertexData);
-        shapes.push_back(shape);
+        // Model name
+        std::string modelName = fileName.substr(fileName.find_last_of("/\\") + 1);
+        modelName = modelName.substr(0, modelName.find_last_of('.')) + "/" + mesh->mName.C_Str();
+
+        // Create Model
+        Model *model = new Model(modelName, VAO, vertexData, "shaders/jet.vert", "shaders/jet.frag");
+        models[modelName] = model;
     }
 
-    return shapes;
+    return models;
 }

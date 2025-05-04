@@ -68,10 +68,10 @@ void Renderer::Draw()
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
 
-    // Draw Shapes
-    for (int i = 0; i < shapes.size(); i++)
+    // Draw Entities
+    for (int i = 0; i < entities.size(); i++)
     {
-        shapes[i]->Draw(&camera);
+        entities[i]->Draw();
     }
 
     // Process Keyboard Input
@@ -90,36 +90,40 @@ GLFWwindow *Renderer::GetWindow()
     return window;
 }
 
-void Renderer::DeleteShapes()
+void Renderer::DeleteModels()
 {
-    for (Shape *shape : shapes)
+    for (auto it = models.begin(); it != models.end(); ++it)
     {
-        delete shape;
+        delete it->second;
+        models.erase(it);
     }
 }
 
-void Renderer::AddShape(Shape *shape)
+Model *Renderer::LoadModel(std::string fileName)
 {
-    shapes.push_back(shape);
+    Model *model = loader.LoadModel(fileName, &VAO);
+    models[model->name] = model;
+
+    return model;
 }
 
-Shape *Renderer::LoadShape(std::string fileName)
+std::map<std::string, Model *> Renderer::LoadModels(std::string fileName)
 {
-    Shape *shape = objLoader.LoadShape(fileName, &VAO);
-    shapes.push_back(shape);
-    return shape;
-}
+    std::map<std::string, Model *> models = loader.LoadModels(fileName, &VAO);
 
-std::vector<Shape *> Renderer::LoadShapes(std::string fileName)
-{
-    std::vector<Shape *> shapes = objLoader.LoadShapes(fileName, &VAO);
-
-    printf("Number of shapes loaded: %zu\n", shapes.size());
-
-    for (Shape *shape : shapes)
+    for (const auto &[name, model] : models)
     {
-        this->shapes.push_back(shape);
+        this->models[name] = model;
+        std::cout << name << std::endl;
     }
 
-    return shapes;
+    return models;
+}
+
+Entity *Renderer::CreateEntity(Model *model)
+{
+    Entity *entity = new Entity(model, &camera);
+
+    entities.push_back(entity);
+    return entity;
 }

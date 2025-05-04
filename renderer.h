@@ -6,10 +6,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
+#include <map>
 #include "camera.h"
-#include "shape.h"
-#include "objLoader.h"
-using namespace glm;
+#include "ModelLoader.h"
+#include "entity.h"
 
 #pragma once
 
@@ -22,12 +22,12 @@ private:
     float lastFrame = 0.0f;
 
     GLFWwindow *window;
+    ModelLoader loader = ModelLoader();
 
-    std::vector<Shape *> shapes;
+    std::map<std::string, Model *> models;
+    std::vector<Entity *> entities;
 
-    ObjLoader objLoader = ObjLoader();
-
-    void DeleteShapes();
+    void DeleteModels();
 
 public:
     Camera camera = Camera(width, height);
@@ -37,8 +37,11 @@ public:
     ~Renderer();
 
     void Draw();
+
     GLFWwindow *GetWindow();
-    void AddShape(Shape *shape);
-    Shape *LoadShape(std::string fileName);
-    std::vector<Shape *> LoadShapes(std::string fileName);
+
+    Model *LoadModel(std::string fileName);
+    std::map<std::string, Model *> LoadModels(std::string fileName);
+
+    Entity *CreateEntity(Model *model);
 };

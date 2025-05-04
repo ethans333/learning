@@ -1,4 +1,3 @@
-#include "shape.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -8,15 +7,17 @@
 #include <GL/gl.h>
 #include <unordered_map>
 #include <string>
+#include <map>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include "model.h"
 
 #pragma once
 
-class ObjLoader
+class ModelLoader
 {
 public:
-    std::vector<Shape *> LoadShapes(std::string fileName, GLuint *VAO);
-    Shape *LoadShape(std::string fileName, GLuint *VAO);
+    std::map<std::string, Model *> LoadModels(std::string fileName, GLuint *VAO);
+    Model *LoadModel(std::string fileName, GLuint *VAO);
 };

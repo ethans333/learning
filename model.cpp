@@ -1,11 +1,78 @@
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#include <string>
-#include <fstream>
-#include <sstream>
-#include <vector>
+#include "model.h"
 
-GLuint LoadShaders(const char *vertex_file_path, const char *fragment_file_path)
+Model::Model(std::string name, GLuint *VAO, std::vector<GLfloat> vertices, std::string vertexShader, std::string fragmentShader)
+{
+    /*
+        Vertices:
+        x, y, z, r, g, b, nx, ny, nz - vertex, color, normal
+    */
+
+    this->name = name;
+    this->VAO = VAO;
+    vertexCount = vertices.size() / 9;
+
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
+
+    // Bind VAO
+    glBindVertexArray(*VAO);
+
+    // Create Vertex VBO
+    glGenBuffers(1, &buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), vertices.data(), GL_STATIC_DRAW);
+
+    // Set Vertex VBO Attributes
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
+
+    // Unbind VAO
+    glBindVertexArray(0);
+
+    // Create Shader Program
+    shader = LoadShaders(vertexShader.c_str(), fragmentShader.c_str());
+}
+
+Model::~Model()
+{
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &buffer);
+    glDeleteProgram(shader);
+}
+
+void Model::UseShader(glm::mat4 modelMatrix, Camera *camera)
+{
+    // Use shader
+    glUseProgram(shader);
+
+    // Shader Variables
+    glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, glm::value_ptr(modelMatrix));
+    glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, GL_FALSE, glm::value_ptr(camera->view));
+    glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, GL_FALSE, glm::value_ptr(camera->projection));
+    glUniform3fv(glGetUniformLocation(shader, "lightPos"), 1, glm::value_ptr(glm::vec3(1, 20, 1)));
+    glUniform3fv(glGetUniformLocation(shader, "viewPos"), 1, glm::value_ptr(camera->position));
+}
+
+void Model::Draw()
+{
+    // Bind VAO
+    glBindVertexArray(*VAO);
+
+    // Bind VBO
+    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+
+    // Configure attributes for this VBO
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(GLfloat), (void *)0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(GLfloat), (void *)(3 * sizeof(GLfloat)));
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(GLfloat), (void *)(6 * sizeof(GLfloat)));
+
+    // Bind VAO and draw
+    glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+}
+
+GLuint Model::LoadShaders(const char *vertex_file_path, const char *fragment_file_path)
 {
 
     // Create the shaders
@@ -76,7 +143,6 @@ GLuint LoadShaders(const char *vertex_file_path, const char *fragment_file_path)
     }
 
     // Link the program
-    printf("Linking program\n");
     GLuint ProgramID = glCreateProgram();
     glAttachShader(ProgramID, VertexShaderID);
     glAttachShader(ProgramID, FragmentShaderID);
