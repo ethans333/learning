@@ -2,187 +2,196 @@
 
 Shape *ObjLoader::LoadShape(std::string fileName, GLuint *VAO)
 {
-    std::vector<glm::vec3> vertices;
-    std::vector<glm::vec3> texcoords;
-    std::vector<glm::vec3> normals;
-    std::vector<glm::vec3> colors;
-    std::vector<std::vector<FaceElement>> faces;
+    Shape *shape;
 
-    std::unordered_map<std::string, glm::vec3> colorMap;
-    std::string currentMat;
+    // Create an Assimp importer
+    Assimp::Importer importer;
 
-    std::ifstream file(fileName);
-    if (!file.is_open())
+    // Import the model with some post-processing flags
+    const aiScene *scene = importer.ReadFile(fileName,
+                                             aiProcess_Triangulate |               // Convert all primitives to triangles
+                                                 aiProcess_GenSmoothNormals |      // Generate normals if none exist
+                                                 aiProcess_FlipUVs |               // Flip textures on Y axis (if needed)
+                                                 aiProcess_JoinIdenticalVertices); // Optimize mesh
+
+    // Check for errors
+    if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
-        fprintf(stderr, "Failed to open OBJ file: %s \n", fileName);
+        std::cerr << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
+        return shape;
     }
 
-    std::string line;
-    while (std::getline(file, line))
+    // Extract vertex data
+    std::vector<float> vertexData;
+
+    // Process all meshes in the scene
+    for (unsigned int i = 0; i < scene->mNumMeshes; i++)
     {
-        std::istringstream iss(line);
-        std::string prefix;
-        iss >> prefix;
+        aiMesh *mesh = scene->mMeshes[i];
 
-        if (prefix == "mtllib")
+        // Get material color
+        glm::vec3 color(1.0f);
+        if (mesh->mMaterialIndex >= 0)
         {
-            std::string mtlFile;
-            iss >> mtlFile;
-            colorMap = ParseMaterial(GetDirectory(fileName) + "/" + mtlFile);
-        }
-        else if (prefix == "v")
-        {
-            glm::vec3 v;
-            iss >> v.x >> v.y >> v.z;
-            vertices.push_back(v);
-        }
-        else if (prefix == "vt")
-        {
-            glm::vec3 vt;
-            iss >> vt.x >> vt.y;
-            texcoords.push_back(vt);
-        }
-        else if (prefix == "vn")
-        {
-            glm::vec3 vn;
-            iss >> vn.x >> vn.y >> vn.z;
-            normals.push_back(vn);
-        }
-        else if (prefix == "usemtl")
-        {
-            iss >> currentMat;
-        }
-        else if (prefix == "f")
-        {
-            std::vector<FaceElement> face;
-            std::string vertex;
-
-            while (iss >> vertex)
+            aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
+            aiColor3D diffuse(0.f, 0.f, 0.f);
+            if (material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuse) == AI_SUCCESS)
             {
-                std::replace(vertex.begin(), vertex.end(), '/', ' ');
-                std::istringstream viss(vertex);
-                FaceElement fe;
-                viss >> fe.v >> fe.vt >> fe.vn;
-                face.push_back(fe);
+                color = glm::vec3(diffuse.r, diffuse.g, diffuse.b);
             }
+        }
 
-            faces.push_back(face);
-            colors.push_back(colorMap[currentMat]);
+        for (unsigned int j = 0; j < mesh->mNumFaces; j++)
+        {
+            const aiFace &face = mesh->mFaces[j];
+
+            // Process each vertex in the face (triangles)
+            for (unsigned int k = 0; k < face.mNumIndices; k++)
+            {
+                unsigned int vertexIndex = face.mIndices[k];
+
+                // Position
+                aiVector3D pos = mesh->mVertices[vertexIndex];
+                vertexData.push_back(pos.x);
+                vertexData.push_back(pos.y);
+                vertexData.push_back(pos.z);
+
+                // Color (from material)
+                vertexData.push_back(color.r);
+                vertexData.push_back(color.g);
+                vertexData.push_back(color.b);
+
+                // Normal
+                if (mesh->HasNormals())
+                {
+                    aiVector3D normal = mesh->mNormals[vertexIndex];
+                    vertexData.push_back(normal.x);
+                    vertexData.push_back(normal.y);
+                    vertexData.push_back(normal.z);
+                }
+                else
+                {
+                    vertexData.push_back(0.0f);
+                    vertexData.push_back(0.0f);
+                    vertexData.push_back(1.0f);
+                }
+
+                // // Texture coordinates
+                // if (mesh->HasTextureCoords(0))
+                // {
+                //     aiVector3D uv = mesh->mTextureCoords[0][vertexIndex];
+                //     vertexData.push_back(uv.x);
+                //     vertexData.push_back(uv.y);
+                // }
+                // else
+                // {
+                //     vertexData.push_back(0.0f);
+                //     vertexData.push_back(0.0f);
+                // }
+            }
         }
     }
 
-    file.close();
-    std::vector<GLfloat> modelBuffer = BuildBuffer(&faces, &vertices, &normals, &colors);
-    return new Shape(VAO, modelBuffer);
+    // Create a new shape
+    shape = new Shape(VAO, vertexData);
+    return shape;
 }
 
 std::vector<Shape *> ObjLoader::LoadShapes(std::string fileName, GLuint *VAO)
 {
-    // TODO
-}
+    std::vector<Shape *> shapes;
 
-void ObjLoader::AddVertexData(std::vector<GLfloat> &buffer, const glm::vec3 &vertex, const glm::vec3 &color, const glm::vec3 &normal)
-{
-    // Add Vertex
-    buffer.push_back((GLfloat)vertex.x);
-    buffer.push_back((GLfloat)vertex.y);
-    buffer.push_back((GLfloat)vertex.z);
+    // Create an Assimp importer
+    Assimp::Importer importer;
 
-    // Add Color
-    buffer.push_back((GLfloat)color.x);
-    buffer.push_back((GLfloat)color.y);
-    buffer.push_back((GLfloat)color.z);
+    // Import the model with some post-processing flags
+    const aiScene *scene = importer.ReadFile(fileName,
+                                             aiProcess_Triangulate |               // Convert all primitives to triangles
+                                                 aiProcess_GenSmoothNormals |      // Generate normals if none exist
+                                                 aiProcess_FlipUVs |               // Flip textures on Y axis (if needed)
+                                                 aiProcess_JoinIdenticalVertices); // Optimize mesh
 
-    // Add Normal
-    buffer.push_back((GLfloat)normal.x);
-    buffer.push_back((GLfloat)normal.y);
-    buffer.push_back((GLfloat)normal.z);
-}
-
-void ObjLoader::AddTriangle(std::vector<GLfloat> &buffer, const glm::vec3 &v1, const glm::vec3 &v2, const glm::vec3 &v3, const glm::vec3 &color, const glm::vec3 &normal)
-{
-    AddVertexData(buffer, v1, color, normal);
-    AddVertexData(buffer, v2, color, normal);
-    AddVertexData(buffer, v3, color, normal);
-}
-
-std::vector<GLfloat> ObjLoader::BuildBuffer(std::vector<std::vector<FaceElement>> *faces, std::vector<glm::vec3> *vertices, std::vector<glm::vec3> *normals, std::vector<glm::vec3> *colors)
-{
-    std::vector<GLfloat> buffer;
-
-    for (size_t i = 0; i < faces->size(); i++)
+    // Check for errors
+    if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
-        std::vector<FaceElement> &face = (*faces)[i];
-        size_t nV = face.size();
-        glm::vec3 color = (*colors)[i];
-        glm::vec3 normal = (*normals)[face[0].vn];
+        std::cerr << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
+        return shapes;
+    }
 
-        if (nV == 3)
-        {
-            // Simple triangle
-            AddTriangle(buffer, (*vertices)[face[0].v - 1], (*vertices)[face[1].v - 1], (*vertices)[face[2].v - 1], color, normal);
-        }
-        else if (nV == 4)
-        {
-            // Quad - split into two triangles
-            glm::vec3 v0 = (*vertices)[face[0].v - 1];
-            glm::vec3 v1 = (*vertices)[face[1].v - 1];
-            glm::vec3 v2 = (*vertices)[face[2].v - 1];
-            glm::vec3 v3 = (*vertices)[face[3].v - 1];
+    // Process all meshes in the scene
+    for (unsigned int i = 0; i < scene->mNumMeshes; i++)
+    {
+        aiMesh *mesh = scene->mMeshes[i];
 
-            AddTriangle(buffer, v0, v1, v2, color, normal);
-            AddTriangle(buffer, v0, v2, v3, color, normal);
-        }
-        else
+        // Get material color
+        glm::vec3 color(1.0f);
+        if (mesh->mMaterialIndex >= 0)
         {
-            // N-gon - triangulate using fan method
-            glm::vec3 v0 = (*vertices)[face[0].v - 1];
-
-            for (size_t j = 1; j + 1 < nV; j++)
+            aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
+            aiColor3D diffuse(0.f, 0.f, 0.f);
+            if (material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuse) == AI_SUCCESS)
             {
-                AddTriangle(buffer, v0, (*vertices)[face[j].v - 1], (*vertices)[face[j + 1].v - 1], color, normal);
+                color = glm::vec3(diffuse.r, diffuse.g, diffuse.b);
             }
         }
-    }
 
-    return buffer;
-}
+        // Extract vertex data
+        std::vector<float> vertexData;
 
-std::unordered_map<std::string, glm::vec3> ObjLoader::ParseMaterial(std::string fileName)
-{
-    std::unordered_map<std::string, glm::vec3> colorMap;
-    std::string currentMaterial;
-
-    std::ifstream file(fileName);
-    if (!file.is_open())
-    {
-        fprintf(stderr, "Failed to open material file: %s \n", fileName);
-    }
-
-    std::string line;
-    while (std::getline(file, line))
-    {
-        std::istringstream iss(line);
-        std::string prefix;
-        iss >> prefix;
-
-        if (prefix == "newmtl")
+        for (unsigned int j = 0; j < mesh->mNumFaces; j++)
         {
-            iss >> currentMaterial;
+            const aiFace &face = mesh->mFaces[j];
+
+            // Process each vertex in the face (triangles)
+            for (unsigned int k = 0; k < face.mNumIndices; k++)
+            {
+                unsigned int vertexIndex = face.mIndices[k];
+
+                // Position
+                aiVector3D pos = mesh->mVertices[vertexIndex];
+                vertexData.push_back(pos.x);
+                vertexData.push_back(pos.y);
+                vertexData.push_back(pos.z);
+
+                // Color (from material)
+                vertexData.push_back(color.r);
+                vertexData.push_back(color.g);
+                vertexData.push_back(color.b);
+
+                // Normal
+                if (mesh->HasNormals())
+                {
+                    aiVector3D normal = mesh->mNormals[vertexIndex];
+                    vertexData.push_back(normal.x);
+                    vertexData.push_back(normal.y);
+                    vertexData.push_back(normal.z);
+                }
+                else
+                {
+                    vertexData.push_back(0.0f);
+                    vertexData.push_back(0.0f);
+                    vertexData.push_back(1.0f);
+                }
+
+                // // Texture coordinates
+                // if (mesh->HasTextureCoords(0))
+                // {
+                //     aiVector3D uv = mesh->mTextureCoords[0][vertexIndex];
+                //     vertexData.push_back(uv.x);
+                //     vertexData.push_back(uv.y);
+                // }
+                // else
+                // {
+                //     vertexData.push_back(0.0f);
+                //     vertexData.push_back(0.0f);
+                // }
+            }
         }
-        else if (prefix == "Kd")
-        {
-            float r, g, b;
-            iss >> r >> g >> b;
-            colorMap[currentMaterial] = glm::vec3(r, g, b);
-        }
+
+        // Create a new shape
+        Shape *shape = new Shape(VAO, vertexData);
+        shapes.push_back(shape);
     }
 
-    return colorMap;
-}
-
-std::string ObjLoader::GetDirectory(const std::string &filePath)
-{
-    size_t found = filePath.find_last_of("/\\");
-    return (found != std::string::npos) ? filePath.substr(0, found) : ".";
+    return shapes;
 }

@@ -16,7 +16,8 @@
         "${fileDirname}/main",
         "-lGL",
         "-lGLEW",
-        "-lglfw"
+        "-lglfw",
+        "-lassimp"
       ],
       "options": {
         "cwd": "${workspaceFolder}"

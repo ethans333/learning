@@ -39,7 +39,7 @@ Renderer::Renderer()
     glfwSwapInterval(1);
 
     // Input
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
     glfwSetWindowUserPointer(window, &camera);
@@ -112,5 +112,14 @@ Shape *Renderer::LoadShape(std::string fileName)
 
 std::vector<Shape *> Renderer::LoadShapes(std::string fileName)
 {
-    return objLoader.LoadShapes(fileName, &VAO);
+    std::vector<Shape *> shapes = objLoader.LoadShapes(fileName, &VAO);
+
+    printf("Number of shapes loaded: %zu\n", shapes.size());
+
+    for (Shape *shape : shapes)
+    {
+        this->shapes.push_back(shape);
+    }
+
+    return shapes;
 }
